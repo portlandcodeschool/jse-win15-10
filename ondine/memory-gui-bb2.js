@@ -28,16 +28,16 @@ var MemoryGUI = (function() { // begin IIFE
     
     game.collection.on({
       'show':function(options) {
-        findCardView(options.id).show(options.clicked);
+        findCardView(options.where).show(options.clicked);
       },
       'hideSoon':function(options) {
         window.setTimeout(function() {
-            options.id.forEach(hideAt);
+            options.where.forEach(hideAt);
         }, 800);
       },
       'removeSoon':function(options) {
         window.setTimeout(function() {
-            options.id.forEach(removeAt);
+            options.where.forEach(removeAt);
         }, 800);
       }
     });
@@ -96,7 +96,7 @@ var MemoryGUI = (function() { // begin IIFE
           var card = new CardView({
               //pass some options downward:
               game: options.game,
-              id: i
+              where: i
           });
           this.cardviews.push(card);
           // connect card's element to DOM;
@@ -114,19 +114,19 @@ var MemoryGUI = (function() { // begin IIFE
 
   var CardView = Backbone.View.extend({
     tagName: 'div',
-    className: 'generic',
+    className: 'facedown',
     events: {
         'click': 'lift'
     },
     initialize: function(options) {
       this.game = options.game;
       this.where = options.where;
-      this.id = options.id;
-      this.$el.addClass('facedown');
+      // this.id = options.id;
+      // this.$el.addClass('facedown');
     },
     // Each view should respond to a click with this method:
     lift: function() {
-      this.game.lift(this.id);
+      this.game.lift(this.where);
     },
     // Each view can re-render its own card in these four ways:
     show: function(clicked) {

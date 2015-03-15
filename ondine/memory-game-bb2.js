@@ -20,7 +20,6 @@ var MemoryGame = (function() {
     // Helper functions which need access to closure vars;
     //  some fns will be made public as instance methods:
     var reset = function() {
-      //slots = cardset.values();
       collection.reset(collection.shuffle());
       collection.models.forEach(function(model,pos) {
         model.set(model.defaults);
@@ -28,14 +27,13 @@ var MemoryGame = (function() {
       });
       length = collection.models.length;
       picked = false;
-      // shuffle(slots);
     }
+
     reset(); // reset now as part of init'ing
 
     var size = function() {
       return length;
     };
-
     var remainsAt = function(where) {//--> boolean
       var status = collection.at(where).get('status');
       return (status === 'faceup' || status === 'facedown');
@@ -79,16 +77,16 @@ var MemoryGame = (function() {
           // match; remove both:
           removeAt(pick);
           removeAt(picked);
-              collection.trigger('removeSoon',{id:[pick,picked]});
+            collection.trigger('removeSoon',{where:[pick,picked]});
           //optional: report match
         } else {
           hideAt(picked);
-            collection.trigger('hideSoon',{id:[pick,picked]});
+            collection.trigger('hideSoon',{where:[pick,picked]});
         }
         //either way, turn face-up to face-down:
         picked = false;
       }
-      collection.trigger('show',{id:pick, clicked:displayPick});
+      collection.trigger('show',{where:pick, clicked:displayPick});
       return displayPick; 
     };
 
@@ -110,20 +108,6 @@ var MemoryGame = (function() {
         && (where>=0)
         && (where<length);
     }
-/*
-  function shuffle(array) {
-  // Knuth-Fisher-Yates, modified from http://bost.ocks.org/mike/shuffle/
-    var end = array.length, temp, i;
-        // While picked remain elements to shuffle…
-    while (end>1) {
-        // Pick a remaining element…
-        i = Math.floor(Math.random() * end--);
-        // And swap it with the current element.
-        temp = array[end];
-        array[end] = array[i];
-        array[i] = temp;
-    }
-  }
-*/
+    
   return GameCtor;
 })();
