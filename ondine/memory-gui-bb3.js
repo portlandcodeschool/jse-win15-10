@@ -1,16 +1,15 @@
 var MemoryGUI = (function() { // begin IIFE
 
   // Ctor for master gui object:
-  function GUI(container,game) {
+  function GUI(container,game,boardChoice) {
     // ensure that a string container begins with '#'
       if (typeof container === 'string')
           if (container[0] !== '#')
               container = '#'+container;
 
     // Generate all views:
-    // without mainview variable, Error: mainview is not defined
     var mainview = 
-    this.mainview = new MainView({
+    this.mainview = new MainViewQuotes({ /* boardChoice */
         el:container,
         // Pass a reference to game downward to all views:
         game:game
@@ -26,46 +25,30 @@ var MemoryGUI = (function() { // begin IIFE
         findCardView(where).remove();
     }
 
-    function doSoon(locs,fn) {// locs is an array of #s; methodName is 'hide' or 'remove'
-    // In a little while, call the hide() or remove() method for each card subview in locs...
-    // (This could also be split into two separate methods (hideSoon, removeSoon))
+    function doSoon(locs,fn) {/* locs is an array of #s; methodName is 'hide' or 'remove'. Call the hide() or remove() method for each card subview in locs. (use two separate methods (hideSoon, removeSoon)*/
 
         var cards=this.cards; //retain this.cards as variable so that it's available to forEach callback below
-        window.setTimeout(function () { // after a delay...
-            locs.forEach(function(loc) { // for each location...
-                // forEach doesn't set 'this', so needs var 'cards' from closure:
+        window.setTimeout(function () {
+            locs.forEach(function(loc) {
+                // forEach doesn't set 'this'
+                // loop needs var 'cards' from closure:
                 fn(loc);// use appropriate method of appropriate card view
             });
-        }, 800); // 1 second delay
+        }, 800);
     }
+
     game.collection.on({
       'change:status':function(model,value,details) {
-        // This function will be triggered whenever any model (i.e. card)
-        //  changes its status (including during reset!)
+        // This function will be triggered whenever any model 
+        //  changes its status (including at reset)
         var loc = details.where;
         if (loc === undefined) return;
-        if (value === 'faceup') // what is this connected to?
-            findCardView(details.where).show(details.clicked);
-        else if (value === 'facedown') {
-            if (details.now)
-                resetAt(loc); //hide without delay
-            else
-                doSoon([loc],hideAt);
+        if (value === 'faceup') {
+            findCardView(details.where).show(details.faceValue);
+        } else if (value === 'facedown') {
+            doSoon([loc],hideAt);
         } else if (value === 'matched')
             doSoon([loc],removeAt);
-      },
-      'show':function(options) {
-        findCardView(options.where).show(options.clicked);
-      },
-      'hideSoon':function(options) {
-        window.setTimeout(function() {
-            options.where.forEach(hideAt);
-        }, 800);
-      },
-      'removeSoon':function(options) {
-        window.setTimeout(function() {
-            options.where.forEach(removeAt);
-        }, 800);
       }
     });
   } // end gui constructor
@@ -78,31 +61,13 @@ var MemoryGUI = (function() { // begin IIFE
     className: 'memoryboard',
 
     initialize: function(options) {
-      //options should include el and game
       this.game = options.game;
       this.gridview = new GridView({
           //pass some options downward:
           game:options.game
       });
-      // Add HTML to page header
-      $('<img src="images/targaryen-sigil.png">')
-                .addClass('sigil')
-                .prependTo('#header');
-      $('<div>').addClass('pageTitle')
-                .appendTo('#header');
-      $('<h1>').html('Wisdom of Westeros')
-                .appendTo('.pageTitle');
-      $('<h2>').html('Match <em>Game of Thrones</em> characters with their words!')
-                .appendTo('.pageTitle');
-      // create and attach a reset button:
-      $('<button>').html('Play Again')
-                  .addClass('resetButton')
-                  .appendTo(this.gridview.$el); // button only works if inside gridview
-      // attach gridview.el below this.el
+      this.buildHeader();
       this.gridview.$el.appendTo(this.$el);
-      // Add HTML to page footer
-      $('<p>').html('Design by Ondine Gallatin')
-              .appendTo('#footer');
     },
     
     resetAll: function() {
@@ -112,12 +77,31 @@ var MemoryGUI = (function() { // begin IIFE
   }); // end mainview
 
 
+  var MainViewQuotes = MainView.extend({
+    buildHeader: function() {
+      $('<img src="images/targaryen-sigil.png" class="sigil">')
+            // .addClass('sigil')
+                .prependTo('#header');
+      $('<div>').addClass('pageTitle')
+                .appendTo('#header');
+      $('<h1>').html('Wisdom of Westeros')
+                .appendTo('.pageTitle');
+      $('<h2>').html('Match <em>Game of Thrones</em> characters with their words!')
+                .appendTo('.pageTitle');
+      $('<button>').html('Play Again')
+                  .addClass('resetButton')
+                  .appendTo(this.gridview.$el);
+      $('<p>').html('Design by Ondine Gallatin')
+              .appendTo('#footer');
+      }
+  });
+
   var GridView = Backbone.View.extend({
     tagName: 'div',
     className: 'memoryboard',
 
     initialize: function(options) {
-      this.game = options.game;//
+      this.game = options.game;
       this.cardviews = []; // grid's subviews
 
       var len = this.game.size();
@@ -129,7 +113,7 @@ var MemoryGUI = (function() { // begin IIFE
               where: i
           });
           this.cardviews.push(card);
-          // connect card's element to DOM;
+          // connect card's element to DOM
           this.$el.append(card.el);
       }
     },
@@ -152,7 +136,7 @@ var MemoryGUI = (function() { // begin IIFE
       this.game = options.game;
       this.where = options.where;
     },
-    // Each view should respond to a click with this method:
+    // Each view should respond to a click:
     lift: function() {
       this.game.lift(this.where);
     },
@@ -165,7 +149,7 @@ var MemoryGUI = (function() { // begin IIFE
               .addClass('cardImage');
       } else {
           this.$el.addClass('cardQuote')
-               .html('<p class="quote">' + clicked + '</p>');
+              .html('<p class="quote">' + clicked + '</p>');
       }
     },
     remove: function() { //remove as matched

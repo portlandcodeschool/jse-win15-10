@@ -20,7 +20,7 @@ var MemoryGame = (function() {
     // Helper functions which need access to closure vars;
     //  some fns will be made public as instance methods:
     var reset = function() {
-      collection.reset(collection.shuffle());
+      collection.reset(collection.shuffle()); /* BB shuffle() proxie is found in Backbone > Collection > Underscore Methods (28) > Collections > shuffle */
       collection.models.forEach(function(model,pos) {
         model.set(model.defaults);
         model.set({'position':pos});
@@ -34,58 +34,48 @@ var MemoryGame = (function() {
     var size = function() {
       return length;
     };
-    this.cardset = function() { // new in version 3
+    this.cardset = function() {
       return cardset;
     };
-    var remainsAt = function(where) {//--> boolean
+    var remainsAt = function(where) { //--> boolean
       var status = collection.at(where).get('status');
       return (status === 'faceup' || status === 'facedown');
     };
-    var valueAt = function(where) {//--> card val
+    var valueAt = function(where) { //--> card val
       return collection.at(where).attributes.value;
     };
-    // showAt is new in 3
-    // is what is not working from 2 to 3:
-    var showAt = function(where,clicked) {
-      collection.at(where).set({status:'faceup'},{where:where, clicked:clicked});
+    var showAt = function(where,faceValue) {
+      collection.at(where).set({status:'faceup'},{where:where, faceValue:faceValue});
     };
-    /*
-    var removeAt = function(where) {
-      collection.at(where).set({status:'matched'});
-    };
-    var hideAt = function(where) {
-      collection.at(where).set(status,'facedown');
-    };
-    */
     var removeAt = function(where) {
       collection.at(where).set({status:'matched'},{where:where});
     };
     var hideAt = function(where) {
       collection.at(where).set({status:'facedown'},{where:where});
     };
-
-    // common between 2 and 3:
-    var faceupValue = function() {//--> card val
+    var faceupValue = function() {
       return valueAt(picked);
     };
-    var faceupWhere = function() {//--> integer
+    var faceupWhere = function() { //--> integer
       return picked;
     };
-    var remaining = function() {//--> array of integers
+    var remaining = function() { //--> array of integers
       return collection.where({status:'facedown'})
           .map(function(model){
             return model.attributes.position;
           });
     };
 
-    var lift = function(pick) {//--> display string
+    var lift = function(pick) { //--> display cardface
       if (!isValid(pick,length)) return false;
       if (!remainsAt(pick)) return false;
       if (picked===pick) return false;
 
-      // must be a face-down card here; proceed...
-      var valPick = valueAt(pick);
+      // must be a face-down card here
+      var valPick = valueAt(pick),
         displayPick = cardset.display(valPick);
+
+      showAt(pick, displayPick);  
       if (picked === false) {
         // no current face-up
         picked = pick; //turn pick face-up
@@ -95,19 +85,13 @@ var MemoryGame = (function() {
           // match; remove both:
           removeAt(pick);
           removeAt(picked);
-          // version 2:
-          // collection.trigger('removeSoon',{where:[pick,picked]});
         } else {
           hideAt(pick);
           hideAt(picked);
-          // version 2:
-          // collection.trigger('hideSoon',{where:[pick,picked]});
         }
-        //either way, turn face-up to face-down:
+        // either way, turn face-up to face-down:
         picked = false;
       }
-      // version 2:
-      // collection.trigger('show',{where:pick, clicked:displayPick});
       return displayPick; 
     };
 
