@@ -1,0 +1,63 @@
+.memorygame {
+	display:block;
+	float:left;
+	clear:both;
+}
+
+.memorygrid {
+	float:left;
+	display:inline-block;
+	margin:10px;
+}
+
+.memorygrid .memorycell {
+	width:200px;
+	height:150px;
+	border-radius:5px;
+	border:1px solid black;
+	background-image: url(img/NickBack.png);
+	float:left;
+	text-align:center;
+	line-height:60px;
+	font-size:large;
+	margin:5px;
+	content: none;
+}
+
+.memorygrid .memorycell > img {
+	visibility: hidden;
+}
+
+.memorygrid .firstcol {
+	clear:both;
+}
+
+.memorygrid .faceup {
+	background-color:#ffffff;
+
+	/*content: none;*/
+}
+
+.memorygrid .faceup > img {
+	visibility: visible;
+}
+
+.memorygrid .faceup:before {
+	/*content:attr(value);  shows card face value */
+	/*border: 2px solid yellow;*/
+}
+/*
+.memorygrid .facedown > img {
+	visibility: hidden;
+}*/
+
+.memorygrid .missing > img {
+	visibility: visible;
+}
+
+.resetBtnRow {
+	text-align:center;
+}
+.resetBtn {
+	display:inline-block;
+}
